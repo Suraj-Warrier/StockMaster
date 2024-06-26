@@ -1,0 +1,8 @@
+#TODO: 
+get sagemaker, host model, create endpoints
+Backend:
+	-create scraper, scrape stock data. Put it in the stock database
+	-also along with it, put the scrape values in corresponding stock rooms
+	-create endpoints to serve 'full details' of stock to the client (database query for future pred,fundamentals and past data)
+	
+

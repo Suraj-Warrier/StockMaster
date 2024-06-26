@@ -1,0 +1,70 @@
+using Backend.Models;
+using Microsoft.EntityFrameworkCore.Migrations;
+using System.Collections.Generic;
+
+namespace Backend.Migrations
+{
+    public partial class AddStockDataColumnsWithPriceTimestamp : Migration
+    {
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AddColumn<List<PriceTimestamp>>(
+                name: "FiveMinData",
+                table: "Stocks",
+                type: "jsonb",
+                nullable: false,
+                defaultValue: new List<PriceTimestamp>());
+
+            migrationBuilder.AddColumn<List<PriceTimestamp>>(
+                name: "ThirtyMinData",
+                table: "Stocks",
+                type: "jsonb",
+                nullable: false,
+                defaultValue: new List<PriceTimestamp>());
+
+            migrationBuilder.AddColumn<List<PriceTimestamp>>(
+                name: "OneHourData",
+                table: "Stocks",
+                type: "jsonb",
+                nullable: false,
+                defaultValue: new List<PriceTimestamp>());
+
+            migrationBuilder.AddColumn<List<PriceTimestamp>>(
+                name: "OneDayData",
+                table: "Stocks",
+                type: "jsonb",
+                nullable: false,
+                defaultValue: new List<PriceTimestamp>());
+
+            migrationBuilder.AddColumn<List<PriceTimestamp>>(
+                name: "OneWeekData",
+                table: "Stocks",
+                type: "jsonb",
+                nullable: false,
+                defaultValue: new List<PriceTimestamp>());
+        }
+
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "FiveMinData",
+                table: "Stocks");
+
+            migrationBuilder.DropColumn(
+                name: "ThirtyMinData",
+                table: "Stocks");
+
+            migrationBuilder.DropColumn(
+                name: "OneHourData",
+                table: "Stocks");
+
+            migrationBuilder.DropColumn(
+                name: "OneDayData",
+                table: "Stocks");
+
+            migrationBuilder.DropColumn(
+                name: "OneWeekData",
+                table: "Stocks");
+        }
+    }
+}
