@@ -6,10 +6,12 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import '../css/HomeHeader.css';
+import { Paper, Popper, Tooltip } from '@mui/material';
 import { UserContext } from '../App';
 import { useNavigate } from 'react-router-dom';
-import { Paper, Popper } from '@mui/material';
+import ResetPasswordModal from './ResetPasswordModal';
+import FilterModal from './FilterModal'; // Import the FilterModal component
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 const HomeHeader = () => {
   const [selectedButton, setSelectedButton] = useState("Feed");
@@ -20,10 +22,12 @@ const HomeHeader = () => {
   const [searchAnchorEl, setSearchAnchorEl] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredStocks, setFilteredStocks] = useState([]);
-  const [stocks,setStocks] = useState('');
+  const [stocks, setStocks] = useState([]);
   const { setLogin } = useContext(UserContext);
   const searchInputRef = useRef(null);
   const navigate = useNavigate();
+  const [isResetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
+  const [isFilterModalOpen, setFilterModalOpen] = useState(false); // State for filter modal
 
   useEffect(() => {
     const fetchStocks = async () => {
@@ -43,7 +47,7 @@ const HomeHeader = () => {
   }, []);
 
   useEffect(() => {
-    if (searchQuery!=='') {
+    if (searchQuery !== '') {
       const filtered = stocks.filter(stock =>
         (stock.stockName.toLowerCase().includes(searchQuery.toLowerCase()) || stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()))
       );
@@ -86,6 +90,7 @@ const HomeHeader = () => {
   };
 
   const reset_password = () => {
+    setResetPasswordModalOpen(true); // Open the modal
     handleProfileMenuItemClick();
   };
 
@@ -99,13 +104,11 @@ const HomeHeader = () => {
   const handleSearchClick = (event) => {
     setSearchAnchorEl(event.currentTarget);
     if (searchQuery) {
-      // Trigger filtering if there's a search query
       const filtered = stocks.filter(stock =>
         stock.stockName.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredStocks(filtered);
     }
-
   };
 
   const handleInputChange = (event) => {
@@ -121,6 +124,50 @@ const HomeHeader = () => {
     if (searchInputRef.current && !searchInputRef.current.contains(event.target)) {
       handleSearchClose();
     }
+  };
+
+  const handleResetPasswordSubmit = async (currentPassword, newPassword, confirmPassword) => {
+    if (newPassword !== confirmPassword) {
+      alert("New password and confirm password do not match");
+      return;
+    }
+  
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5247/api/Account/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          currentPassword, 
+          newPassword, 
+          confirmPassword 
+        })
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(errorData.message || "Failed to reset password");
+        return;
+      }
+  
+      alert("Password changed successfully");
+      setResetPasswordModalOpen(false);
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      alert("An error occurred while resetting the password");
+    }
+  };
+
+  const handleFilterClick = () => {
+    setFilterModalOpen(true); // Open the filter modal
+  };
+
+  const handleFilterSubmit = (filters) => {
+    // Implement filter logic here
+    console.log(filters);
   };
 
   const selectedButtonStyle = {
@@ -175,13 +222,14 @@ const HomeHeader = () => {
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography
             component="div"
-            sx={{ fontFamily: "Oswald", fontWeight: 'bold', fontSize: '1.5em',cursor:"pointer" }}
+            sx={{ fontFamily: "Oswald", fontWeight: 'bold', fontSize: '1.5em', cursor: "pointer" }}
             onClick={handleFeedClick}
           >
             StockMaster
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <input ref={searchInputRef} style={{ ...inputFieldStyle, width: '300px', marginRight: '20px' }} placeholder='Search for stocks' onClick={handleSearchClick} value={searchQuery} onChange={handleInputChange} />
+            <FilterAltIcon sx={{width:'8%', cursor: 'pointer'}} onClick={handleFilterClick} />
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Button
@@ -220,7 +268,6 @@ const HomeHeader = () => {
           </Box>
         </Toolbar>
       </AppBar>
-      {/* Popper for search suggestions */}
       <Popper
         open={Boolean(searchAnchorEl)}
         anchorEl={searchAnchorEl}
@@ -239,6 +286,17 @@ const HomeHeader = () => {
           )}
         </Paper>
       </Popper>
+      <ResetPasswordModal
+        open={isResetPasswordModalOpen}
+        onClose={() => setResetPasswordModalOpen(false)}
+        onSubmit={handleResetPasswordSubmit}
+      />
+      <FilterModal
+        open={isFilterModalOpen}
+        onClose={() => setFilterModalOpen(false)}
+        stocks={stocks}
+        onSubmit={handleFilterSubmit}
+      />
     </>
   );
 };
