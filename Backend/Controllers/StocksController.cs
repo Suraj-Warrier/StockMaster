@@ -25,5 +25,21 @@ namespace Backend.Controllers
 
             return Ok(stocks);
         }
+
+        [HttpGet("{symbol}")]
+        public async Task<IActionResult> SelectedStock(string symbol)
+        {
+            // Explicitly check the type and debug if necessary
+            var stock = await _context.Stocks
+        .FirstOrDefaultAsync(s => s.Symbol == symbol);
+
+            if (stock == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(stock);
+        }
+
     }
 }

@@ -37,45 +37,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         ValidAudience = Configuration["JwtSettings:Audience"]
     };
 
-    
-
-    // options.Events = new JwtBearerEvents
-    // {
-    //     OnAuthenticationFailed = context =>
-    //     {
-    //         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-    //         logger.LogError("Authentication failed: {Message}", context.Exception.Message);
-    //         context.Response.StatusCode = 401;
-    //         context.Response.ContentType = "application/json";
-    //         return context.Response.WriteAsync(Newtonsoft.Json.JsonConvert.SerializeObject(new { error = context.Exception.Message }));
-    //     },
-    //     OnTokenValidated = context =>
-    //     {
-    //         var userId = context.Principal.Identity.Name;
-    //         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-    //         logger.LogInformation("Token validated for user {UserId}", userId);
-    //         return Task.CompletedTask;
-    //     },
-    //     OnChallenge = context =>
-    //     {
-    //         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-    //         logger.LogWarning("OnChallenge error: {ErrorDescription}", context.ErrorDescription);
-
-    //         if (!context.Response.HasStarted)
-    //         {
-    //             context.HandleResponse();
-    //             context.Response.StatusCode = 401;
-    //             context.Response.ContentType = "application/json";
-    //             return context.Response.WriteAsync(Newtonsoft.Json.JsonConvert.SerializeObject(new { error = "You are not authorized "+"" }));
-    //         }
-    //         return Task.CompletedTask;
-    //     },
-    //     OnMessageReceived = context =>{
-    //         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-    //          logger.LogInformation("Token validated for user {UserId}", 123);
-    //         return Task.CompletedTask;
-    //     }
-    // };
 });
 
 builder.Services.AddAuthorization();
@@ -85,9 +46,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAllOrigins", builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
-// builder.Services.AddSingleton<StockWebSocketHandler>();
-// builder.Services.AddHostedService<StockScrapingService>();
-// builder.Services.AddHostedService<StockStorageService>();
+builder.Services.AddSingleton<StockWebSocketHandler>();
+builder.Services.AddHostedService<StockScrapingService>();
+builder.Services.AddHostedService<StockStorageService>();
 builder.Services.AddControllers();
 builder.Services.AddLogging();
 builder.Services.AddTransient<EmailService>();
@@ -144,25 +105,27 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// app.Use(async (context, next) =>
-// {
-//     if (context.Request.Path == "/stocks")
-//     {
-//         if (context.WebSockets.IsWebSocketRequest)
-//         {
-//             var webSocketHandler = app.Services.GetRequiredService<StockWebSocketHandler>();
-//             var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-//             await webSocketHandler.HandleWebSocketAsync(context, webSocket);
-//         }
-//         else
-//         {
-//             context.Response.StatusCode = 400;
-//         }
-//     }
-//     else
-//     {
-//         await next();
-//     }
-// });
+
+//to activate the websocket handler when required
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/stocks")
+    {
+        if (context.WebSockets.IsWebSocketRequest)
+        {
+            var webSocketHandler = app.Services.GetRequiredService<StockWebSocketHandler>();
+            var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+            await webSocketHandler.HandleWebSocketAsync(context, webSocket);
+        }
+        else
+        {
+            context.Response.StatusCode = 400;
+        }
+    }
+    else
+    {
+        await next();
+    }
+});
 
 app.Run();

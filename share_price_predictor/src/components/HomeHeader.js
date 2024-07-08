@@ -10,7 +10,7 @@ import { Paper, Popper, Tooltip } from '@mui/material';
 import { UserContext } from '../App';
 import { useNavigate } from 'react-router-dom';
 import ResetPasswordModal from './ResetPasswordModal';
-import FilterModal from './FilterModal'; // Import the FilterModal component
+import FilterModal from './FilterModal';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 const HomeHeader = () => {
@@ -23,11 +23,12 @@ const HomeHeader = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredStocks, setFilteredStocks] = useState([]);
   const [stocks, setStocks] = useState([]);
-  const { setLogin } = useContext(UserContext);
+  const { setLogin,setFeedStocks } = useContext(UserContext);
   const searchInputRef = useRef(null);
   const navigate = useNavigate();
   const [isResetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
-  const [isFilterModalOpen, setFilterModalOpen] = useState(false); // State for filter modal
+  const [isFilterModalOpen, setFilterModalOpen] = useState(false);
+  const [selectedStock, setSelectedStock] = useState(null);
 
   useEffect(() => {
     const fetchStocks = async () => {
@@ -38,6 +39,7 @@ const HomeHeader = () => {
         }
         const data = await response.json();
         setStocks(data);
+        setFeedStocks(data);
       } catch (error) {
         console.error('Error fetching stocks:', error);
       }
@@ -90,7 +92,7 @@ const HomeHeader = () => {
   };
 
   const reset_password = () => {
-    setResetPasswordModalOpen(true); // Open the modal
+    setResetPasswordModalOpen(true);
     handleProfileMenuItemClick();
   };
 
@@ -115,14 +117,16 @@ const HomeHeader = () => {
     setSearchQuery(event.target.value);
   };
 
-  const handleSearchClose = () => {
+  const handleSearchClose = (symbol) => {
     setSearchAnchorEl(null);
     setFilteredStocks([]);
+    navigate(`/stock/${symbol}`);
   };
 
   const handleClickAway = (event) => {
     if (searchInputRef.current && !searchInputRef.current.contains(event.target)) {
-      handleSearchClose();
+      setSearchAnchorEl(null);
+      setFilteredStocks([]);
     }
   };
 
@@ -131,7 +135,7 @@ const HomeHeader = () => {
       alert("New password and confirm password do not match");
       return;
     }
-  
+
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:5247/api/Account/change-password', {
@@ -146,13 +150,13 @@ const HomeHeader = () => {
           confirmPassword 
         })
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         alert(errorData.message || "Failed to reset password");
         return;
       }
-  
+
       alert("Password changed successfully");
       setResetPasswordModalOpen(false);
     } catch (error) {
@@ -162,11 +166,10 @@ const HomeHeader = () => {
   };
 
   const handleFilterClick = () => {
-    setFilterModalOpen(true); // Open the filter modal
+    setFilterModalOpen(true);
   };
 
   const handleFilterSubmit = (filters) => {
-    // Implement filter logic here
     console.log(filters);
   };
 
@@ -277,7 +280,7 @@ const HomeHeader = () => {
         <Paper sx={{ width: searchAnchorEl ? searchAnchorEl.clientWidth : undefined }}>
           {filteredStocks.length > 0 ? (
             filteredStocks.map((stock, index) => (
-              <MenuItem key={index} onClick={handleSearchClose}>
+              <MenuItem key={index} onClick={() => handleSearchClose(stock.symbol)}>
                 {stock.stockName} ({stock.symbol})
               </MenuItem>
             ))
@@ -286,6 +289,17 @@ const HomeHeader = () => {
           )}
         </Paper>
       </Popper>
+      {selectedStock && (
+        <div>
+          <h2>Selected Stock Details</h2>
+          <p>Stock Name: {selectedStock.stockName}</p>
+          <p>Symbol: {selectedStock.symbol}</p>
+          <p>Market Cap: {selectedStock.marketCap}</p>
+          <p>Average Volume: {selectedStock.avgVol}</p>
+          <p>P/E Ratio: {selectedStock.peRatio}</p>
+          {/* Display other stock details as needed */}
+        </div>
+      )}
       <ResetPasswordModal
         open={isResetPasswordModalOpen}
         onClose={() => setResetPasswordModalOpen(false)}

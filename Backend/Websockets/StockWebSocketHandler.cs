@@ -68,12 +68,16 @@ namespace Backend.WebSockets
             }
         }
 
-        public async Task BroadcastStockPrices(Dictionary<string, string> stockPrices)
+        public async Task BroadcastStockPrices(Dictionary<string,string> stockPrices)
         {
+            var stockandprice =new Dictionary<string,string> ();
+            foreach (var stock in stockPrices){
+                stockandprice[stock.Key] = stock.Value;
+            }
             var message = new WebSocketMessage
             {
                 Type = "stockUpdate",
-                StockPrices = stockPrices,
+                StockPrices = stockandprice,
                 Timestamp = DateTime.UtcNow
             };
 

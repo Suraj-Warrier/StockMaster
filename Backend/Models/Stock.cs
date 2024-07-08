@@ -7,6 +7,9 @@ namespace Backend.Models
         public int Id { get; set; }
         public string StockName { get; set; } = string.Empty;
         public string Symbol { get; set; } = string.Empty;
+        public string MarketCap {get;set;} = string.Empty;
+        public string AvgVol{get;set;} = string.Empty;
+        public string PERatio{get;set;} = string.Empty;
 
         public List<PriceTimestamp> FiveMinData { get; set; } = new List<PriceTimestamp>();
         public List<PriceTimestamp> ThirtyMinData { get; set; } = new List<PriceTimestamp>();

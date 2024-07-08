@@ -1,7 +1,6 @@
 import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
-import yfinance as yf
 
 async def fetch_stock_data(session, stock_symbol):
     url = f'https://www.google.com/finance/quote/{stock_symbol}:NSE'
@@ -17,14 +16,30 @@ async def fetch_stock_data(session, stock_symbol):
             try:
                 price = soup.find('div', class_='YMlKec fxKbKc').text
                 clean_price = price.replace('₹', '').replace(',', '').strip()
-                print(f"Stock: {stock_symbol}, Price: {clean_price}")
-                
-                # Fetch additional data using yfinance
-                ticker = yf.Ticker(stock_symbol)
-                volume = ticker.history(period='1d')['Volume'].iloc[0]
-                print(f"Trade Volume: {volume}")
             except AttributeError:
-                print(f"Could not find the stock data for {stock_symbol}")
+                clean_price = "N/A"
+                print(f"Could not find the stock price for {stock_symbol}")
+            
+            market_cap = avg_volume = pe_ratio = "N/A"
+            
+            try:
+                details_divs = soup.find_all('div', class_='gyFHrc')
+                for div in details_divs:
+                    label = div.text.strip()
+                    value_div = div.find('div', class_='P6K39c')
+                    if value_div:
+                        value = value_div.text.strip()
+
+                        if 'Market cap' in label:
+                            market_cap = value
+                        elif 'Avg Volume' in label:
+                            avg_volume = value
+                        elif 'P/E ratio' in label:
+                            pe_ratio = value
+            except (AttributeError, IndexError):
+                print(f"Could not find the additional details for {stock_symbol}")
+
+            print(f"Stock: {stock_symbol}, Price: {clean_price}, Market Cap: {market_cap}, Avg Volume: {avg_volume}, PE Ratio: {pe_ratio}")
         else:
             print(f"Failed to retrieve data for {stock_symbol}. HTTP Status code: {response.status}")
 
@@ -34,5 +49,5 @@ async def main(stock_symbols):
         await asyncio.gather(*tasks)
 
 # Example usage
-stock_symbols = ['RELIANCE', 'TCS', 'INFY', 'RPOWER']  # Add more symbols as needed
+stock_symbols = ['RELIANCE', 'TCS', 'INFY', 'RPOWER', 'ADANIGREEN', 'BAJAJ-AUTO', 'COALINDIA', 'COLPAL', 'GILLETTE', 'GODREJIND', 'HDFCBANK']  # Add more symbols as needed
 asyncio.run(main(stock_symbols))
