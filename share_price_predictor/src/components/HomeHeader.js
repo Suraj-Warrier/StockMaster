@@ -6,7 +6,9 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { Paper, Popper, Tooltip } from '@mui/material';
+import Divider from '@mui/material/Divider';
+import { Paper, Popper, Tooltip, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Snackbar, Alert } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import { UserContext } from '../App';
 import { useNavigate } from 'react-router-dom';
 import ResetPasswordModal from './ResetPasswordModal';
@@ -16,19 +18,22 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt';
 const HomeHeader = () => {
   const [selectedButton, setSelectedButton] = useState("Feed");
   const [watchlistLabel, setWatchlistLabel] = useState("Watchlist");
-  const watchlists = ["watchlist1", "watchlist2", "watchlist3", "watchlist4"];
+  const [watchlists, setWatchlists] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [profileAnchor, setProfileAnchor] = useState(null);
   const [searchAnchorEl, setSearchAnchorEl] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredStocks, setFilteredStocks] = useState([]);
+  const [snackbarMessage, setSnackbarMessage] = useState(null);
   const [stocks, setStocks] = useState([]);
-  const { setLogin,setFeedStocks } = useContext(UserContext);
+  const { setLogin, setFeedStocks, login } = useContext(UserContext);
   const searchInputRef = useRef(null);
   const navigate = useNavigate();
   const [isResetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
   const [isFilterModalOpen, setFilterModalOpen] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
+  const [isAddWatchlistModalOpen, setAddWatchlistModalOpen] = useState(false);
+  const [newWatchlistName, setNewWatchlistName] = useState('');
 
   useEffect(() => {
     const fetchStocks = async () => {
@@ -38,10 +43,12 @@ const HomeHeader = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        setStocks(data);
-        setFeedStocks(data);
+        setStocks(data.$values);
+        setFeedStocks(data.$values);
+        console.log("feedstocks: ", data.$values);
       } catch (error) {
         console.error('Error fetching stocks:', error);
+        setSnackbarMessage({type:'error',message:'Error fetching stocks'});
       }
     };
 
@@ -59,8 +66,19 @@ const HomeHeader = () => {
     }
   }, [searchQuery, stocks]);
 
-  const handleMenuClick = (event) => {
+  const handleMenuClick = async (event) => {
     setAnchorEl(event.currentTarget);
+    try {
+      const response = await fetch(`http://localhost:5247/api/Watchlist/list/${login}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setWatchlists(data.$values);
+    } catch (error) {
+      console.error('Error fetching watchlists:', error);
+      setSnackbarMessage({type:'error',message:'Error fetching watchlists'});
+    }
   };
 
   const handleProfileClose = () => {
@@ -74,16 +92,18 @@ const HomeHeader = () => {
   const handleFeedClick = () => {
     setSelectedButton("Feed");
     setWatchlistLabel("Watchlist");
+    navigate("/feed");
   };
 
   const handleClose = () => {
     setAnchorEl(null);
   };
 
-  const handleMenuItemClick = (label) => {
-    setWatchlistLabel(label);
+  const handleMenuItemClick = (watchlist) => {
+    setWatchlistLabel(watchlist.name);
     setSelectedButton('Watchlist');
     handleClose();
+    navigate(`/watchlist/${watchlist.id}`);
   };
 
   const handleProfileMenuItemClick = () => {
@@ -99,6 +119,7 @@ const HomeHeader = () => {
   const Sign_out = () => {
     handleProfileMenuItemClick();
     localStorage.removeItem('token');
+    setSnackbarMessage({type:'success',message:'logged out successfully'});
     setLogin(false);
     navigate('/');
   };
@@ -144,10 +165,10 @@ const HomeHeader = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          currentPassword, 
-          newPassword, 
-          confirmPassword 
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmPassword
         })
       });
 
@@ -156,8 +177,8 @@ const HomeHeader = () => {
         alert(errorData.message || "Failed to reset password");
         return;
       }
-
-      alert("Password changed successfully");
+      setSnackbarMessage({type:'success',message:'Password changed successfully'});
+      // alert("Password changed successfully");
       setResetPasswordModalOpen(false);
     } catch (error) {
       console.error("Error resetting password:", error);
@@ -219,6 +240,50 @@ const HomeHeader = () => {
     };
   }, []);
 
+  const handleAddWatchlistClick = () => {
+    setAddWatchlistModalOpen(true);
+    handleClose();
+  };
+
+  const handleAddWatchlistClose = () => {
+    setAddWatchlistModalOpen(false);
+  };
+
+  const handleAddWatchlistSubmit = async () => {
+    if (!newWatchlistName.trim()) {
+      alert("Watchlist name cannot be empty");
+      return;
+    }
+
+    if (watchlists.some(watchlist => watchlist.name.toLowerCase() === newWatchlistName.toLowerCase())) {
+      alert("Watchlist name already exists");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5247/api/Watchlist/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: newWatchlistName, userId: login })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const newWatchlist = await response.json();
+      setWatchlists([...watchlists, newWatchlist]);
+      setSnackbarMessage({type:'success',message:'Watchlist added successfully'});
+      setNewWatchlistName('');
+      setAddWatchlistModalOpen(false);
+    } catch (error) {
+      console.error('Error creating watchlist:', error);
+      alert('Failed to create watchlist');
+    }
+  };
+
   return (
     <>
       <AppBar position="static" sx={{ backgroundColor: "#133353" }}>
@@ -232,7 +297,7 @@ const HomeHeader = () => {
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <input ref={searchInputRef} style={{ ...inputFieldStyle, width: '300px', marginRight: '20px' }} placeholder='Search for stocks' onClick={handleSearchClick} value={searchQuery} onChange={handleInputChange} />
-            <FilterAltIcon sx={{width:'8%', cursor: 'pointer'}} onClick={handleFilterClick} />
+            <FilterAltIcon sx={{ width: '8%', cursor: 'pointer' }} onClick={handleFilterClick} />
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Button
@@ -245,16 +310,21 @@ const HomeHeader = () => {
               sx={selectedButton === 'Watchlist' ? selectedButtonStyle : buttonStyle}
               onClick={handleMenuClick}
             >
-              {watchlistLabel}
+              Watchlists
             </Button>
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleClose}
             >
+              <MenuItem onClick={handleAddWatchlistClick}>
+                Add Watchlist <AddIcon />
+              </MenuItem>
+              {watchlists.length > 0 && <Divider />}
+              {watchlists.length > 0 && <MenuItem disabled> </MenuItem>}
               {watchlists.map((label) => (
-                <MenuItem key={label} onClick={() => handleMenuItemClick(label)}>
-                  {label}
+                <MenuItem key={label.id} onClick={() => handleMenuItemClick(label)}>
+                  {label.name}
                 </MenuItem>
               ))}
             </Menu>
@@ -305,12 +375,40 @@ const HomeHeader = () => {
         onClose={() => setResetPasswordModalOpen(false)}
         onSubmit={handleResetPasswordSubmit}
       />
+      {snackbarMessage && (
+        <Snackbar open={true} autoHideDuration={6000} onClose={() => setSnackbarMessage(null)}>
+          <Alert onClose={() => setSnackbarMessage(null)} severity={snackbarMessage.type} sx={{ width: '100%' }}>
+            {snackbarMessage.message}
+          </Alert>
+        </Snackbar>
+      )}
       <FilterModal
         open={isFilterModalOpen}
         onClose={() => setFilterModalOpen(false)}
         stocks={stocks}
         onSubmit={handleFilterSubmit}
       />
+      <Dialog open={isAddWatchlistModalOpen} onClose={handleAddWatchlistClose}>
+        <DialogTitle>Add Watchlist</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Name of the watchlist"
+            fullWidth
+            value={newWatchlistName}
+            onChange={(e) => setNewWatchlistName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleAddWatchlistClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleAddWatchlistSubmit} color="primary">
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

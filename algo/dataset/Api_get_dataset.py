@@ -22,12 +22,12 @@ def download_csv(url, params, filename):
 
 # Example usage
 if __name__ == "__main__":
-    stocks = ["BAJAJ-AUTO.BSE","ADANIGREEN.BSE","TATAMOTORS.BSE","HDFCBANK.BSE","COALINDIA.BSE","COLPAL.BSE","GILLETTE.BSE","GODREJIND.BSE","IBM","IRCTC.BSE","KALYANKJIL.BSE","NESTLEIND.BSE","NHPC.BSE","RELIANCE.BSE","SUZLON.BSE"]
+    stocks = ["ICICIBANK.BSE"]
     for stock in stocks:
         api_url = "https://www.alphavantage.co/query"
         symbol = stock
         interval = "5min"
-        function = "TIME_SERIES_WEEKLY"
+        function = "TIME_SERIES_DAILY"
         query_params = {
             "function": function,
             "symbol": symbol,
@@ -36,5 +36,5 @@ if __name__ == "__main__":
             "apikey": "BH74MEWAH8WMLW7N",
             "datatype": "csv"
         }
-        filename = f"{symbol}_{interval}.csv"
+        filename = f"{symbol}_{function}.csv"
         download_csv(api_url, query_params, filename)

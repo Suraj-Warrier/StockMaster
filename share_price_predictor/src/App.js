@@ -6,15 +6,18 @@ import Feed from './pages/Feed';
 import PrivateRoute from './Helpers/PrivateRoute';
 import Layout from './Helpers/Layout';
 import StockDetail from './pages/StockDetail'; // Import the StockDetail component
+import WatchlistPage from './pages/WatchlistPage';
 
 export const UserContext = createContext();
 
 function App() {
   const [login, setLogin] = useState(false);
   const [feedStocks,setFeedStocks] = useState([]);
+  const [currentPrices, setCurrentPrices]  = useState([]);
+  const [lastPrices,setLastPrices] = useState([]);
   return (
     <BrowserRouter>
-      <UserContext.Provider value={{ login, setLogin,feedStocks,setFeedStocks }}>
+      <UserContext.Provider value={{ login, setLogin,feedStocks,setFeedStocks, currentPrices, setCurrentPrices,lastPrices,setLastPrices }}>
         <Routes>
           <Route path="/" element={<SignIn />} />
           <Route path="/register" element={<SignUp />} />
@@ -31,11 +34,21 @@ function App() {
           <Route
             path="/stock/:symbol"
             element={
-              // <PrivateRoute>
+              <PrivateRoute>
                 <Layout>
                   <StockDetail />
                 </Layout>
-              // </PrivateRoute>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/watchlist/:watchlistId"
+            element={
+              <PrivateRoute>
+                <Layout>
+                  <WatchlistPage />
+                </Layout>
+              </PrivateRoute>
             }
           />
         </Routes>

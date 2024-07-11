@@ -88,11 +88,13 @@ namespace Backend.Controllers
             {
                 var token = GenerateJwtToken(user);
                 _logger.LogInformation("User {Email} logged in successfully", model.Email);
-                return Ok(new { token });
+                return Ok(new { token, userId = user.Id });
             }
+
             _logger.LogWarning("Login attempt failed for {Email}", model.Email);
             return Unauthorized();
         }
+
 
         [Authorize]
         [HttpPost("change-password")]

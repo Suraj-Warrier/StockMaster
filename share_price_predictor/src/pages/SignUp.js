@@ -1,7 +1,7 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import stock_img from "../res/stock_market.png"
 import { Button, Grid, Link, Paper, TextField, Typography } from '@mui/material';
-import { UserContext } from '../App';
+
 import { useNavigate } from 'react-router-dom';
 
 const SignUp = () => {
@@ -14,8 +14,6 @@ const SignUp = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError,setConfirmPasswordError] = useState('');
-
-  const {setLogin}  = useContext(UserContext);
 
   const navigate = useNavigate();
 

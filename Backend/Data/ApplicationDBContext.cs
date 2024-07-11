@@ -1,8 +1,6 @@
 using Backend.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 namespace Backend.Data
 {
@@ -48,7 +46,8 @@ namespace Backend.Data
             modelBuilder.Entity<WatchlistStock>()
                 .HasOne(ws => ws.Watchlist)
                 .WithMany(w => w.WatchlistStocks)
-                .HasForeignKey(ws => ws.WatchlistId);
+                .HasForeignKey(ws => ws.WatchlistId)
+                .OnDelete(DeleteBehavior.Cascade); // Cascade delete
 
             modelBuilder.Entity<WatchlistStock>()
                 .HasOne(ws => ws.Stock)

@@ -57,7 +57,8 @@ const SignIn = () => {
             localStorage.setItem('token', token);
             // Navigate to authenticated page or set login state
             console.log('Login successful');
-            setLogin(true);
+            const uid = data.userId;
+            setLogin(uid);
             navigate('/feed');
         } else {
             // Handle login error

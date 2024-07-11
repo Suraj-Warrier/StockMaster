@@ -30,7 +30,7 @@ public class StockStorageService : IHostedService, IDisposable
     {
         _logger.LogInformation("Stock Storage Service is starting.");
 
-        _timer = new Timer(UpdateStockData, null, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+        _timer = new Timer(UpdateStockData, null, TimeSpan.Zero, TimeSpan.FromSeconds(45));
 
         return Task.CompletedTask;
     }

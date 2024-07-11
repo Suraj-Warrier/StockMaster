@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,25 +19,20 @@ var Configuration = builder.Configuration;
 
 builder.Services.AddDbContext<ApplicationDBContext>(options => options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDBContext>().AddDefaultTokenProviders();
-// var jwtSettings = Configuration.GetSection("JwtSettings");
-// var key = Encoding.UTF8.GetBytes(jwtSettings["Secret"]);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
-    // options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
-    
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JwtSettings:Secret"])),
         ValidateLifetime = true,
         ValidateAudience = true,
         ValidateIssuer = true,
-        ValidateIssuerSigningKey=true ,
+        ValidateIssuerSigningKey = true,
         ValidIssuer = Configuration["JwtSettings:Issuer"],
         ValidAudience = Configuration["JwtSettings:Audience"]
     };
-
 });
 
 builder.Services.AddAuthorization();
@@ -49,7 +45,13 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton<StockWebSocketHandler>();
 builder.Services.AddHostedService<StockScrapingService>();
 builder.Services.AddHostedService<StockStorageService>();
-builder.Services.AddControllers();
+
+// Configure JSON serializer to handle object cycles
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+});
+
 builder.Services.AddLogging();
 builder.Services.AddTransient<EmailService>();
 builder.Services.AddTransient<UserService>();
@@ -77,11 +79,11 @@ builder.Services.AddSwaggerGen(opt =>
             {
                 Reference = new OpenApiReference
                 {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
                 }
             },
-            new string[]{}
+            new string[] { }
         }
     });
 });
@@ -102,11 +104,9 @@ app.UseWebSockets();
 app.UseAuthentication();
 app.UseAuthorization();
 
-
 app.MapControllers();
 
-
-//to activate the websocket handler when required
+// to activate the websocket handler when required
 app.Use(async (context, next) =>
 {
     if (context.Request.Path == "/stocks")
