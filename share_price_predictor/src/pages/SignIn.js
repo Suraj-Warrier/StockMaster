@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import stock_img from "../res/stock_market.png"
-import { Button, Grid, Link, Paper, TextField, Typography } from '@mui/material';
+import { Alert, Button, Grid, Link, Paper, Snackbar, TextField, Typography } from '@mui/material';
 import { UserContext } from '../App';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,6 +12,7 @@ const SignIn = () => {
     // State for validation errors
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [snackbarMessages,setSnackbarMessages] = useState('');
 
   const {setLogin}  = useContext(UserContext);
 
@@ -55,6 +56,7 @@ const SignIn = () => {
             const token = data.token;
             // Store token in localStorage or session storage
             localStorage.setItem('token', token);
+            localStorage.setItem('uid',data.userId);
             // Navigate to authenticated page or set login state
             console.log('Login successful');
             const uid = data.userId;
@@ -62,6 +64,7 @@ const SignIn = () => {
             navigate('/feed');
         } else {
             // Handle login error
+            setSnackbarMessages({type:'error',message:'Login failed'});
             console.error('Login failed');
         }
     } catch (error) {
@@ -111,7 +114,15 @@ const SignIn = () => {
           </Typography>
         </Paper>
       </Grid>
+      {snackbarMessages && (
+      <Snackbar open={true} autoHideDuration={6000} onClose={() => setSnackbarMessages(null)}>
+        <Alert onClose={() => setSnackbarMessages(null)} severity={snackbarMessages.type} sx={{ width: '100%' }}>
+          {snackbarMessages.message}
+        </Alert>
+      </Snackbar>
+    )}
     </Grid>
+    
   );
 }
 

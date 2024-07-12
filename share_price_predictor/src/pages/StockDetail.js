@@ -143,22 +143,16 @@ const StockDetail = () => {
 
     switch (range) {
       case '1D':
-        console.log('1d');
         return `${formattedHours}:${minutes} ${ampm}`;
       case '5D':
-        console.log('5d');
         return `${hours}:${minutes}\n${day} ${shortMonth}`;
       case '1M':
-        console.log('1m');
         return `${day}\n${shortMonth}\n${year}`;
       case '6M':
-        console.log('6m');
         return `${day}\n${shortMonth}\n${year}`;
       case '1Y':
-        console.log('1y');
         return `${shortMonth}\n${year}`;
       case 'Max':
-        console.log('max');
         return `${shortMonth}\n${year}`;
       default:
         return time;

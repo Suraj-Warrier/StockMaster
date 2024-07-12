@@ -36,6 +36,7 @@ const HomeHeader = () => {
   const [newWatchlistName, setNewWatchlistName] = useState('');
 
   useEffect(() => {
+    
     const fetchStocks = async () => {
       try {
         const response = await fetch('http://localhost:5247/api/Stocks');
@@ -44,6 +45,7 @@ const HomeHeader = () => {
         }
         const data = await response.json();
         setStocks(data.$values);
+        setLogin(localStorage.getItem('uid'));
         setFeedStocks(data.$values);
         console.log("feedstocks: ", data.$values);
       } catch (error) {
